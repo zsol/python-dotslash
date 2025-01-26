@@ -39,3 +39,9 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ needs.check-new-release.outputs.upstream_latest }}
+          body: See https://github.com/astral-sh/python-build-standalone/releases/tag/${{needs.check-new-release.outputs.upstream_latest}}
+          fail_on_unmatched_files: true
+          files: dist/*
