@@ -1,3 +1,4 @@
+import argparse
 from typing import Final
 import urllib.request
 import json
@@ -51,8 +52,6 @@ PLATFORMS: Final[dict[str, PlatformConfig]] = {
     ),
 }
 
-PYTHON_VERSION = "3.13"
-
 
 def fetch_latest_release() -> Release:
     with urllib.request.urlopen(
@@ -78,11 +77,11 @@ def fetch_latest_release() -> Release:
         )
 
 
-def find_asset_for_platform(release: Release, platform: str) -> Asset:
+def find_asset_for_platform(release: Release, version: str, platform: str) -> Asset:
     ret: list[Asset] = []
     marker = PLATFORMS[platform].marker
     for asset in release.assets:
-        if not asset.name.startswith(f"cpython-{PYTHON_VERSION}"):
+        if not asset.name.startswith(f"cpython-{version}."):
             continue
         if asset.name.endswith(".sha256"):
             continue
@@ -90,10 +89,12 @@ def find_asset_for_platform(release: Release, platform: str) -> Asset:
             ret.append(asset)
     if len(ret) > 1:
         raise ValueError(
-            f"More than one asset matches {marker!r} for {platform=}. Candidates: {[a.name for a in ret]}"
+            f"More than one asset matches {marker!r} for {version=}, {platform=}. Candidates: {[a.name for a in ret]}"
         )
     if len(ret) == 0:
-        raise ValueError(f"No assets found for {platform=} in {release.name=}")
+        raise ValueError(
+            f"No assets found for {version=}, {platform=} in {release.name=}"
+        )
     return ret[0]
 
 
@@ -120,13 +121,20 @@ def platform_descriptor(platform: str, asset: Asset) -> object:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cpython-version", default="3.13")
+    args = parser.parse_args()
+    version = args.cpython_version
+    assert isinstance(version, str)
     rel = fetch_latest_release()
     platform_descriptors = {
-        platform: platform_descriptor(platform, find_asset_for_platform(rel, platform))
+        platform: platform_descriptor(
+            platform, find_asset_for_platform(rel, version, platform)
+        )
         for platform in PLATFORMS.keys()
     }
     descriptor = {
-        "name": f"cpython-{PYTHON_VERSION}",
+        "name": f"cpython-{version}",
         "platforms": platform_descriptors,
     }
     print("#!/usr/bin/env dotslash")
