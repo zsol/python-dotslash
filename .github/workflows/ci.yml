@@ -1,5 +1,8 @@
 name: CI
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   generate-dotslash-files:
@@ -38,3 +41,5 @@ jobs:
       - uses: facebook/install-dotslash@v2
       - uses: actions/setup-python@v5
       - run: python test.py dist/
+        env:
+          PYTHONUTF8: 1
