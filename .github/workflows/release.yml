@@ -2,6 +2,9 @@ name: Release
 
 on:
   workflow_dispatch:
+  # TODO: remove this
+  push:
+    branches: [release]
 
 jobs:
   check-new-release:
