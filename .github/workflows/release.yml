@@ -2,7 +2,7 @@ name: Release
 
 on:
   workflow_dispatch:
-  # TODO: remove this
+  # TODO: remove dis
   push:
     branches: [release]
 
