@@ -28,7 +28,7 @@ jobs:
     if: ${{
       ! startsWith(
       needs.check-new-release.outputs.latest,
-      needs.check-new-release.outputs.upstream_latest,
+      needs.check-new-release.outputs.upstream_latest
       )
       }}
     runs-on: ubuntu-latest
