@@ -30,7 +30,7 @@ jobs:
           - macos-13 # intel
           - windows-latest
           - ubuntu-latest
-          # - ubuntu-24.04-arm
+          - ubuntu-24.04-arm
     needs: generate-dotslash-files
     steps:
       - uses: actions/checkout@v4
