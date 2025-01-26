@@ -2,9 +2,8 @@ name: Release
 
 on:
   workflow_dispatch:
-  # TODO: remove dis
-  push:
-    branches: [release]
+  schedule:
+    - cron: "1 8 * * *" # 8:01 UTC every day
 
 jobs:
   check-new-release:
