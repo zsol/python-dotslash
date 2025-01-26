@@ -30,7 +30,14 @@ def main() -> None:
     if dotslash is None:
         print("Dotslash binary cannot be found, failing test.", file=sys.stderr)
         sys.exit(-1)
-    descriptor_paths = sys.argv[1:]
+    args = sys.argv[1:]
+    descriptor_paths: list[Path] = []
+    for arg in args:
+        path = Path(arg)
+        if path.is_dir():
+            descriptor_paths.extend(path.glob("*"))
+        else:
+            descriptor_paths.append(path)
     failure = False
     for path in descriptor_paths:
         try:

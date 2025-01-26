@@ -1,0 +1,39 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  generate-dotslash-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+      - run: |
+          mkdir dist
+          for ver in 3.9 3.10 3.11 3.12 3.13 3.14; do
+              python make_dotslash_file.py --cpython-version $ver > dist/cpython-$ver
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
+          if-no-files-found: error
+
+  validate:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest # arm
+          - macos-13 # intel
+          - windows-latest
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+    needs: generate-dotslash-files
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - uses: facebook/install-dotslash@v2
+      - uses: actions/setup-python@v5
+      - run: python test.py dist/
