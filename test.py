@@ -22,6 +22,7 @@ def check_path(dotslash: str, path: Path) -> None:
     )
     if not proc.stdout.startswith(version):
         raise AssertionError(f"{version=} not found in {proc.stdout=}")
+    print(f"👌{path}")
 
 
 def main() -> None:
@@ -38,7 +39,9 @@ def main() -> None:
             failure = True
             traceback.print_exc()
     if failure:
+        print("🤔")
         sys.exit(1)
+    print("🫡")
 
 
 if __name__ == "__main__":
