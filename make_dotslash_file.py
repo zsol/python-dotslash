@@ -117,6 +117,9 @@ def platform_descriptor(platform: str, asset: Asset) -> object:
         "format": extension,
         "path": PLATFORMS[platform].path,
         "providers": [{"url": asset.browser_download_url}],
+        # this is needed on linux/macos so the interpreter can locate the stdlib and
+        # other runtime files; it's ignored on windows
+        "arg0": "underlying-executable",
     }
 
 
