@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "1 8 * * *" # 8:01 UTC every day
+
+jobs:
+  check-new-release:
+    name: Check for new release in upstream repo
+    runs-on: ubuntu-latest
+    outputs:
+      upstream_latest: ${{steps.check.outputs.upstream_latest}}
+      latest: ${{steps.check.outputs.latest}}
+    steps:
+      - id: check
+        run: |
+          UPSTREAM_LATEST=$(curl https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest | jq -r .name)
+          echo "upstream_latest=${UPSTREAM_LATEST}" >> $GITHUB_OUTPUT
+          LATEST=$(curl https://api.github.com/repos/${{github.repository}}/releases/latest | jq -r .name)
+          echo "latest=${LATEST}" >> $GITHUB_OUTPUT
+
+  build:
+    uses: ./.github/workflows/ci.yml
+  release:
+    needs: [build, check-new-release]
+    if: ${{
+      ! startsWith(
+      needs.check-new-release.outputs.latest,
+      needs.check-new-release.outputs.upstream_latest
+      )
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ needs.check-new-release.outputs.upstream_latest }}
+          body: See https://github.com/astral-sh/python-build-standalone/releases/tag/${{needs.check-new-release.outputs.upstream_latest}}
+          fail_on_unmatched_files: true
+          tag_name: ${{ needs.check-new-release.outputs.upstream_latest }}
+          files: dist/*
