@@ -44,4 +44,5 @@ jobs:
           name: ${{ needs.check-new-release.outputs.upstream_latest }}
           body: See https://github.com/astral-sh/python-build-standalone/releases/tag/${{needs.check-new-release.outputs.upstream_latest}}
           fail_on_unmatched_files: true
+          tag_name: ${{ needs.check-new-release.outputs.upstream_latest }}
           files: dist/*
