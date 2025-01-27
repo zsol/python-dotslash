@@ -30,25 +30,25 @@ class PlatformConfig:
 
 PLATFORMS: Final[dict[str, PlatformConfig]] = {
     "linux-aarch64": PlatformConfig(
-        marker="aarch64-unknown-linux-gnu-lto-full",
-        path="python/install/bin/python",
+        marker="aarch64-unknown-linux-gnu-install_only_stripped",
+        path="python/bin/python",
     ),
     "linux-x86_64": PlatformConfig(
-        marker="x86_64_v3-unknown-linux-gnu-pgo+lto-full",
-        path="python/install/bin/python",
+        marker="x86_64_v3-unknown-linux-gnu-install_only_stripped",
+        path="python/bin/python",
     ),
     "macos-aarch64": PlatformConfig(
-        marker="aarch64-apple-darwin-pgo+lto-full",
-        path="python/install/bin/python",
+        marker="aarch64-apple-darwin-install_only_stripped",
+        path="python/bin/python",
     ),
     "macos-x86_64": PlatformConfig(
-        marker="x86_64-apple-darwin-pgo+lto-full",
-        path="python/install/bin/python",
+        marker="x86_64-apple-darwin-install_only_stripped",
+        path="python/bin/python",
     ),
     # "windows-aarch64": PlatformConfig(...),
     "windows-x86_64": PlatformConfig(
-        marker="x86_64-pc-windows-msvc-shared-pgo-full",
-        path="python/install/python.exe",
+        marker="x86_64-pc-windows-msvc-shared-install_only_stripped",
+        path="python/python.exe",
     ),
 }
 
@@ -98,9 +98,15 @@ def find_asset_for_platform(release: Release, version: str, platform: str) -> As
     return ret[0]
 
 
+ALLOWED_EXTENSIONS = ["tar.gz", "tar.zst"]
+
+
 def platform_descriptor(platform: str, asset: Asset) -> object:
-    extension = "tar.zst"
-    if not asset.browser_download_url.endswith(extension):
+    extension = None
+    for ext in ALLOWED_EXTENSIONS:
+        if asset.browser_download_url.endswith(ext):
+            extension = ext
+    if extension is None:
         raise ValueError(
             f"Asset for {platform=} isn't supported by dotslash: {asset.browser_download_url}"
         )
