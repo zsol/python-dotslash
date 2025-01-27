@@ -6,10 +6,10 @@ https://github.com/user-attachments/assets/4bd1da5b-6fd3-4cfb-968a-02213827c4b8
 
 ## Setup
 
-1. [install dotslash](https://dotslash-cli.com/docs/installation/)
+1. [install dotslash](https://dotslash-cli.com/docs/installation/): `brew install dotslash` or `cargo install dotslash`
 2. download one of the files from [latest
-   release](https://github.com/zsol/dotslash-python/releases/latest)
-3. run it
+   release](https://github.com/zsol/dotslash-python/releases/latest): `curl -L https://github.com/zsol/dotslash-python/releases/latest/download/cpython-3.13 -o python`
+3. run it: `chmod +x python && ./python`
 
 ## Why?
 
