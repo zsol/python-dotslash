@@ -25,30 +25,67 @@ class Release:
 @dataclass(frozen=True)
 class PlatformConfig:
     marker: str
+    flavor: str
     path: str
 
 
-PLATFORMS: Final[dict[str, PlatformConfig]] = {
-    "linux-aarch64": PlatformConfig(
-        marker="aarch64-unknown-linux-gnu-install_only_stripped",
+@dataclass(frozen=True)
+class Platform:
+    name: str
+    free_threaded: bool = False
+
+
+PLATFORMS: Final[dict[Platform, PlatformConfig]] = {
+    Platform("linux-aarch64"): PlatformConfig(
+        marker="aarch64-unknown-linux-gnu",
+        flavor="install_only_stripped",
         path="python/bin/python",
     ),
-    "linux-x86_64": PlatformConfig(
-        marker="x86_64_v3-unknown-linux-gnu-install_only_stripped",
+    Platform("linux-aarch64", free_threaded=True): PlatformConfig(
+        marker="aarch64-unknown-linux-gnu",
+        flavor="freethreaded+lto-full",
+        path="python/install/bin/python",
+    ),
+    Platform("linux-x86_64"): PlatformConfig(
+        marker="x86_64_v3-unknown-linux-gnu",
+        flavor="install_only_stripped",
         path="python/bin/python",
     ),
-    "macos-aarch64": PlatformConfig(
-        marker="aarch64-apple-darwin-install_only_stripped",
+    Platform("linux-x86_64", free_threaded=True): PlatformConfig(
+        marker="x86_64_v3-unknown-linux-gnu",
+        flavor="freethreaded+pgo+lto-full",
+        path="python/install/bin/python",
+    ),
+    Platform("macos-aarch64"): PlatformConfig(
+        marker="aarch64-apple-darwin",
+        flavor="install_only_stripped",
         path="python/bin/python",
     ),
-    "macos-x86_64": PlatformConfig(
-        marker="x86_64-apple-darwin-install_only_stripped",
+    Platform("macos-aarch64", free_threaded=True): PlatformConfig(
+        marker="aarch64-apple-darwin",
+        flavor="freethreaded+pgo+lto-full",
+        path="python/install/bin/python",
+    ),
+    Platform("macos-x86_64"): PlatformConfig(
+        marker="x86_64-apple-darwin",
+        flavor="install_only_stripped",
         path="python/bin/python",
+    ),
+    Platform("macos-x86_64", free_threaded=True): PlatformConfig(
+        marker="x86_64-apple-darwin",
+        flavor="freethreaded+pgo+lto-full",
+        path="python/install/bin/python",
     ),
     # "windows-aarch64": PlatformConfig(...),
-    "windows-x86_64": PlatformConfig(
-        marker="x86_64-pc-windows-msvc-shared-install_only_stripped",
+    Platform("windows-x86_64"): PlatformConfig(
+        marker="x86_64-pc-windows-msvc-shared",
+        flavor="install_only_stripped",
         path="python/python.exe",
+    ),
+    Platform("windows-x86_64", free_threaded=True): PlatformConfig(
+        marker="x86_64-pc-windows-msvc-shared",
+        flavor="freethreaded+pgo-full",
+        path="python/install/python.exe",
     ),
 }
 
@@ -77,19 +114,21 @@ def fetch_latest_release() -> Release:
         )
 
 
-def find_asset_for_platform(release: Release, version: str, platform: str) -> Asset:
+def find_asset_for_platform(
+    release: Release, version: str, platform: Platform
+) -> Asset:
     ret: list[Asset] = []
-    marker = PLATFORMS[platform].marker
+    platform_cfg = PLATFORMS[platform]
     for asset in release.assets:
         if not asset.name.startswith(f"cpython-{version}."):
             continue
         if asset.name.endswith(".sha256"):
             continue
-        if marker in asset.name:
+        if platform_cfg.marker in asset.name and platform_cfg.flavor in asset.name:
             ret.append(asset)
     if len(ret) > 1:
         raise ValueError(
-            f"More than one asset matches {marker!r} for {version=}, {platform=}. Candidates: {[a.name for a in ret]}"
+            f"More than one asset matches {platform_cfg} for {version=}, {platform=}. Candidates: {[a.name for a in ret]}"
         )
     if len(ret) == 0:
         raise ValueError(
@@ -101,7 +140,7 @@ def find_asset_for_platform(release: Release, version: str, platform: str) -> As
 ALLOWED_EXTENSIONS = ["tar.gz", "tar.zst"]
 
 
-def platform_descriptor(platform: str, asset: Asset) -> object:
+def platform_descriptor(platform: Platform, asset: Asset) -> object:
     extension = None
     for ext in ALLOWED_EXTENSIONS:
         if asset.browser_download_url.endswith(ext):
@@ -132,18 +171,23 @@ def platform_descriptor(platform: str, asset: Asset) -> object:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cpython-version", default="3.13")
+    parser.add_argument(
+        "--free-threaded", action="store_true", help="Look for free-threaded builds"
+    )
     args = parser.parse_args()
     version = args.cpython_version
     assert isinstance(version, str)
     rel = fetch_latest_release()
     platform_descriptors = {
-        platform: platform_descriptor(
+        platform.name: platform_descriptor(
             platform, find_asset_for_platform(rel, version, platform)
         )
         for platform in PLATFORMS.keys()
+        if platform.free_threaded == args.free_threaded
     }
+    version_suffix = "ft" if args.free_threaded else ""
     descriptor = {
-        "name": f"cpython-{version}",
+        "name": f"cpython-{version}{version_suffix}",
         "platforms": platform_descriptors,
     }
     print("#!/usr/bin/env dotslash")

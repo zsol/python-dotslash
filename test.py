@@ -14,6 +14,8 @@ def check_path(dotslash: str, path: Path) -> None:
     name = descriptor["name"]
     assert isinstance(name, str)
     version = name.removeprefix("cpython-")
+    free_threaded = version.endswith("ft")
+    version = version.removesuffix("ft")
     proc = subprocess.run(
         [dotslash, path, "-c", "import sys; print(sys.version)"],
         text=True,
@@ -22,6 +24,9 @@ def check_path(dotslash: str, path: Path) -> None:
     )
     if not proc.stdout.startswith(version):
         raise AssertionError(f"{version=} not found in {proc.stdout=}")
+    is_free_threading_build = "free-threading build" in proc.stdout
+    if free_threaded != is_free_threading_build:
+        raise AssertionError(f"Requested {free_threaded=}, got {proc.stdout=}")
     print(f"👌{path}")
 
 
