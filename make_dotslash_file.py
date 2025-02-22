@@ -185,8 +185,9 @@ def main() -> None:
         for platform in PLATFORMS.keys()
         if platform.free_threaded == args.free_threaded
     }
+    version_suffix = "ft" if args.free_threaded else ""
     descriptor = {
-        "name": f"cpython-{version}",
+        "name": f"cpython-{version}{version_suffix}",
         "platforms": platform_descriptors,
     }
     print("#!/usr/bin/env dotslash")
