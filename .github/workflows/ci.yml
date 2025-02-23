@@ -17,7 +17,7 @@ jobs:
               python make_dotslash_file.py --cpython-version $ver > dist/cpython-$ver
           done
           for ver in 3.13 3.14; do
-              python make_dotslash_file.py --free-threaded --cpython-version $ver > dist/cpython-${ver}ft
+              python make_dotslash_file.py --free-threaded --cpython-version $ver > dist/cpython-${ver}t
           done
       - uses: actions/upload-artifact@v4
         with:

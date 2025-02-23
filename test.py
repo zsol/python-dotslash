@@ -14,8 +14,8 @@ def check_path(dotslash: str, path: Path) -> None:
     name = descriptor["name"]
     assert isinstance(name, str)
     version = name.removeprefix("cpython-")
-    free_threaded = version.endswith("ft")
-    version = version.removesuffix("ft")
+    free_threaded = version.endswith("t")
+    version = version.removesuffix("t")
     proc = subprocess.run(
         [dotslash, path, "-c", "import sys; print(sys.version)"],
         text=True,

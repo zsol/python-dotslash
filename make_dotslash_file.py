@@ -185,7 +185,7 @@ def main() -> None:
         for platform in PLATFORMS.keys()
         if platform.free_threaded == args.free_threaded
     }
-    version_suffix = "ft" if args.free_threaded else ""
+    version_suffix = "t" if args.free_threaded else ""
     descriptor = {
         "name": f"cpython-{version}{version_suffix}",
         "platforms": platform_descriptors,
